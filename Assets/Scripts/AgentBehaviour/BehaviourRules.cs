@@ -233,7 +233,7 @@ public class BehaviourRules
     /// <param name="mapSizeZ"> The size (in z axes) of the map in meters.</param>
     /// <param name="safetyDistance"> The distance from the wall at which the rule will starts to be applied. </param>
     /// <returns> A force pushing back inside the map limits.</returns>
-    public static Vector3 BouncesOffWall(Vector3 position, float maxSpeed, float mapSizeX, float mapSizeZ, float safetyDistance = 0.3f)
+    public static Vector3 BouncesOffWall(Vector3 position, float maxSpeed, float mapSizeX, float mapSizeZ, float safetyDistance = 0.2f)
     {
         float x = 0.0f;
         float z = 0.0f;
