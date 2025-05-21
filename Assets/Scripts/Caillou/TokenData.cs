@@ -23,7 +23,7 @@ namespace Caillou
 
         public float Range;                               // Rayon d’influence (m)
         [Range(0f, 1f)] public float Strength01;           // Intensité LED (0-1)
-        public float HitRadius = 0.45f;                    // Rayon d’impact agents
+        public float HitRadius;                    // Rayon d’impact agents
 
         public float GetSignedStrength() =>
             (Polarity == TokenPolarity.Attractor ? +1f : -1f) * Strength01;

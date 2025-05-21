@@ -1,25 +1,21 @@
+// DisplayerTokenInfluence.cs  – fix lecture clip
 using System.Collections.Generic;
 using UnityEngine;
+using Caillou;                               // <-- pour TokenData
 
-/// <summary>
-/// Dessine, pour chaque puck actif, un disque plein représentant
-/// son rayon d’influence et colorié selon sa force :
-///     • bleu (strength = 0)
-///     • rouge (strength = 1)
-/// </summary>
 public class DisplayerTokenInfluence : Displayer
 {
     [Header("Disque")]
-    [Range(3,100)] public int edge = 24;          // segments du disque
+    [Range(3,100)] public int edge = 24;
     public Material material;
 
     Mesh mesh;
-    static readonly Color cold = new (0.0f, 0.4f, 1f);   // bleu
-    static readonly Color hot  = new (1f, 0.2f, 0.1f);   // rouge
+    static readonly Color cold = new (0.0f, 0.4f, 1f);
+    static readonly Color hot  = new (1f, 0.2f, 0.1f);
 
-    void Start()
+    void Awake()                             // Start → Awake (plus tôt)
     {
-        mesh = new Mesh();
+        mesh = new Mesh { name = "TokenInfluenceMesh" };
         var mf = gameObject.AddComponent<MeshFilter>();
         mf.mesh = mesh;
 
@@ -35,48 +31,56 @@ public class DisplayerTokenInfluence : Displayer
     {
         ClearVisual();
 
-        var tokens = Caillou.TokenManager.Instance?.GetActiveTokens();
+        // 1️⃣  On essaye d’abord de prendre les tokens contenus dans la frame
+        IReadOnlyList<TokenData> tokens = null;
+        if (swarmData != null &&                         // clip ou temps réel
+            swarmData.GetTokens() is { Count: >0 } frameTokens)
+        {
+            tokens = frameTokens;
+        }
+        else
+        {
+            // Sinon on se rabat sur les cailloux actifs de la scène
+            tokens = TokenManager.Instance?.GetActiveTokens();
+        }
+
         if (tokens == null || tokens.Count == 0) return;
 
-        List<Vector3> vertices  = new();
-        List<Color>   colors    = new();
-        List<int>     triangles = new();
+        // 2️⃣  Construction du disque
+        var vertices  = new List<Vector3>();
+        var colors    = new List<Color>();
+        var triangles = new List<int>();
 
         foreach (var tok in tokens)
         {
-            // 1.  ~couleur~  (interpolation bleu→rouge)
             Color c = Color.Lerp(cold, hot, tok.Strength01);
 
-            // 2.  génère disque plein centré sur tok.Position
             int vStart = vertices.Count;
-            vertices.Add(tok.Position + Vector3.up * 0.01f);        // centre
+            vertices.Add(tok.Position + Vector3.up * 0.01f);   // centre
             colors  .Add(c);
 
             float step = 2 * Mathf.PI / edge;
             for (int i = 0; i <= edge; i++)
             {
-                float angle = i * step;
-                Vector3 pt = new(
-                    tok.Position.x + Mathf.Cos(angle) * tok.Range,
+                float a  = i * step;
+                Vector3 p = new(
+                    tok.Position.x + Mathf.Cos(a) * tok.Range,
                     tok.Position.y,
-                    tok.Position.z + Mathf.Sin(angle) * tok.Range);
-                vertices.Add(pt);
+                    tok.Position.z + Mathf.Sin(a) * tok.Range);
+                vertices.Add(p);
                 colors.Add(c);
             }
-
-            // triangles  (fan)
             for (int i = 1; i <= edge; i++)
             {
-                triangles.Add(vStart);             // centre
-                triangles.Add(vStart + i);         // i
-                triangles.Add(vStart + i + 1);     // i+1
+                triangles.Add(vStart);
+                triangles.Add(vStart + i);
+                triangles.Add(vStart + i + 1);
             }
         }
 
-        mesh.Clear();
-        mesh.indexFormat        = vertices.Count > 65000 ?
-                                  UnityEngine.Rendering.IndexFormat.UInt32 :
-                                  UnityEngine.Rendering.IndexFormat.UInt16;
+        mesh.indexFormat = vertices.Count > 65000
+            ? UnityEngine.Rendering.IndexFormat.UInt32
+            : UnityEngine.Rendering.IndexFormat.UInt16;
         mesh.SetVertices(vertices);
         mesh.SetColors(colors);
         mesh.SetTriangles(triangles, 0);

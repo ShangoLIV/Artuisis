@@ -40,6 +40,8 @@ public class SwarmParameters
     //-- Token parameters--//
     private float puckInfluenceGain = 2.0f;
     private float puckFallOffExponent = 2.0f;
+    private float repulsorWallBoost = 4.0f;
+    
     
     #region Methods - Constructor
     public SwarmParameters(
@@ -62,7 +64,8 @@ public class SwarmParameters
         float repulsionZoneSize,
         float distanceBetweenAgents,
         float puckInfluenceGain,
-        float puckFallOffExponent)
+        float puckFallOffExponent,
+        float repulsorWallBoost)
     {
         this.agentBehaviour = agentBehaviour;
         this.agentMovement = agentMovement;
@@ -84,6 +87,7 @@ public class SwarmParameters
         this.distanceBetweenAgents = distanceBetweenAgents;
         this.puckInfluenceGain = puckInfluenceGain;
         this.puckFallOffExponent = puckFallOffExponent;
+        this.repulsorWallBoost = repulsorWallBoost;
     }
     #endregion
 
@@ -200,6 +204,11 @@ public class SwarmParameters
     public float GetPuckFallOffExponent()
     {
         return puckFallOffExponent;
+    }
+
+    public float GetRepulsorWallBoost()
+    {
+        return repulsorWallBoost;
     }
 
     #endregion

@@ -1,14 +1,13 @@
 {
   "dependencies": {
     "com.interactive-scape.tuio_client": {
-      "version": "https://github.com/InteractiveScapeGmbH/TuioUnityClient.git",
+      "version": "https://github.com/InteractiveScapeGmbH/TuioUnityClient.git#v2.0.2",
       "depth": 0,
       "source": "git",
       "dependencies": {
-        "com.unity.textmeshpro": "3.0.0",
-        "com.unity.nuget.newtonsoft-json": "3.2.1"
+        "com.unity.textmeshpro": "3.0.0"
       },
-      "hash": "2f8a4bd6873f5e613eea6d5145bdb6934ffcb17a"
+      "hash": "046406e9b00c0808a0d23a21fa25e05979134ef9"
     },
     "com.unity.ai.navigation": {
       "version": "1.1.4",
@@ -17,13 +16,6 @@
       "dependencies": {
         "com.unity.modules.ai": "1.0.0"
       },
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.collab-proxy": {
-      "version": "2.1.0",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.ext.nunit": {
@@ -62,13 +54,6 @@
     },
     "com.unity.mathematics": {
       "version": "1.2.6",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.nuget.newtonsoft-json": {
-      "version": "3.2.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {},

@@ -233,7 +233,7 @@ public class BehaviourRules
     /// <param name="mapSizeZ"> The size (in z axes) of the map in meters.</param>
     /// <param name="safetyDistance"> The distance from the wall at which the rule will starts to be applied. </param>
     /// <returns> A force pushing back inside the map limits.</returns>
-    public static Vector3 BouncesOffWall(Vector3 position, float maxSpeed, float mapSizeX, float mapSizeZ, float safetyDistance = 0.3f)
+    public static Vector3 BouncesOffWall(Vector3 position, float maxSpeed, float mapSizeX, float mapSizeZ, float safetyDistance = 0.2f)
     {
         float x = 0.0f;
         float z = 0.0f;
@@ -295,8 +295,9 @@ public class BehaviourRules
     /// <summary>
     /// Renvoie la force due à tous les cailloux pour un agent donné.
     /// </summary>
-    public static Vector3 ComputeTokenForce(AgentData agent, IReadOnlyList<TokenData> tokens, float gain, float fallExp)
+    public static Vector3 ComputeTokenForce(AgentData agent, IReadOnlyList<TokenData> tokens, float gain, float fallExp, float wallBoost)
     {
+        
         if (tokens == null || tokens.Count == 0) return Vector3.zero;
 
         Vector3 sum = Vector3.zero;
@@ -304,14 +305,26 @@ public class BehaviourRules
         foreach (var tok in tokens)
         {
             float dist = Vector3.Distance(agent.GetPosition(), tok.Position);
+            if (dist < tok.HitRadius)
+            {
+                if (tok.Polarity == TokenPolarity.Repulsor)
+                {
+                    float push = (tok.HitRadius - dist) / tok.HitRadius;
+                    sum += (agent.GetPosition() - tok.Position).normalized * gain * 2f *push;
+                }
+                continue;
+            }
             if (dist > tok.Range) continue;               // hors influence
 
             Vector3 dir = (tok.Position - agent.GetPosition()).normalized;
             float falloff = 1f - dist / tok.Range;        // linéaire (pouvoir varier)
             falloff = Mathf.Pow(falloff, fallExp);
             float signedStrength = tok.GetSignedStrength();
+            float finalGain = tok.Polarity == TokenPolarity.Repulsor
+                ? gain * wallBoost
+                : gain;
 
-            sum += dir * signedStrength * falloff * gain;
+            sum += dir * finalGain * falloff * signedStrength;
         }
         return sum;
     }

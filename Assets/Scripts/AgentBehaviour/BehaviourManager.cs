@@ -73,8 +73,14 @@ public class BehaviourManager
             foreach (var tok in tokens)
             {
                 // on n’ajoute que si l’agent est à moins de Range (optimisation)
-                if ((tok.Position - agent.GetPosition()).sqrMagnitude < tok.Range * tok.Range)
-                    neighboursPositions.Add(tok.Position);
+                float sqrDist = (tok.Position - agent.GetPosition()).sqrMagnitude;
+                float limit = (tok.HitRadius + 0.45f) * (tok.HitRadius + 0.45f);
+                if (sqrDist < limit)
+                {
+                    Vector3 dir = (agent.GetPosition() - tok.Position).normalized;
+                    Vector3 surface = tok.Position + dir * tok.HitRadius;
+                    neighboursPositions.Add(surface);
+                }
             }
         }
 
@@ -87,7 +93,7 @@ public class BehaviourManager
         forces.Add(BehaviourRules.Cohesion(parameters.GetCohesionIntensity(), agent.GetPosition(), neighboursPositions));
         forces.Add(BehaviourRules.Separation(parameters.GetSeparationIntensity(), agent.GetPosition(), neighboursPositions));
         forces.Add(BehaviourRules.Alignment(parameters.GetAlignmentIntensity(), neighboursSpeeds));
-        Vector3 tokenForce = BehaviourRules.ComputeTokenForce(agent, tokens, parameters.GetPuckInfluenceGain(), parameters.GetPuckFallOffExponent());
+        Vector3 tokenForce = BehaviourRules.ComputeTokenForce(agent, tokens, parameters.GetPuckInfluenceGain(), parameters.GetPuckFallOffExponent(), parameters.GetRepulsorWallBoost());
         forces.Add(tokenForce);
         
         return forces;

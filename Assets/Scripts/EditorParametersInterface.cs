@@ -89,6 +89,9 @@ public class EditorParametersInterface : MonoBehaviour
     [SerializeField]
     [Range(0.0f, 5.0f)]
     private float puckFallOffExponent = 2.0f;
+    [SerializeField]
+    [Range(1.0f, 20.0f)]
+    private float repulsorWallBoost = 4.0f;
 
     public SwarmParameters GetParameters()
     {
@@ -111,7 +114,8 @@ public class EditorParametersInterface : MonoBehaviour
                                                         repulsionZoneSize,
                                                         distanceBetweenAgents,
                                                         puckInfluenceGain,
-                                                        puckFallOffExponent);
+                                                        puckFallOffExponent,
+                                                        repulsorWallBoost);
         return parameters;
     }
 
@@ -137,6 +141,8 @@ public class EditorParametersInterface : MonoBehaviour
         this.distanceBetweenAgents = parameters.GetDistanceBetweenAgents();
         this.puckInfluenceGain = parameters.GetPuckInfluenceGain();
         this.puckFallOffExponent = parameters.GetPuckFallOffExponent();
+        this.repulsorWallBoost = parameters.GetRepulsorWallBoost();
+        
     }
 
 

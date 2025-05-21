@@ -15,7 +15,7 @@ public class DraggableToken : MonoBehaviour
 {
     [Header("Paramètres caillou")]
     public TokenPolarity polarity = TokenPolarity.Attractor;  // blanc / noir
-    public float         range    = 3f;                       // rayon d’action
+    public float         range    = 1f;                       // rayon d’action
     [Range(0f,1f)] public float strength = 1f;                // intensité (LED)
     public float hitRadius = 0.45f; // rayon d’impact (pour les agents)
     // ---------------------------------------------------------

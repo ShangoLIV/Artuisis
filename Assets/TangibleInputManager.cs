@@ -1,127 +1,132 @@
-// TangibleInputManager.cs
-// MultiTaction 557D  •  Unity 2023.1.x  •  TuioUnityClient v2.x
-//
-// Instancie deux types de cailloux : attracteur (prefab A) et répulseur (prefab B)
-// selon l’ID du marqueur Codice reçu en TUIO 1.1.
-
+// TangibleInputManager.cs – Unity 2023  +  TuioUnityClient v2.x
 using System.Collections.Generic;
 using UnityEngine;
-using TuioUnity;                         // package InteractiveScape – v2.x
+
+// ► composant Unity (MonoBehaviour) ◄
 using Caillou;
-[DefaultExecutionOrder(-50)]             // s’exécute avant la logique du swarm
+using TuioNet.Common;
+
+// ► classes "données" côté TuioNet ◄
+using TuioNet.Tuio11;
+using TuioUnity.Common; // Tuio11Object, Tuio11Dispatcher
+
 public class TangibleInputManager : MonoBehaviour
 {
-    /* ---------- Réglages dans l’Inspector ---------- */
+    /* -------- Réglages Inspector -------- */
+    [Header("Session TUIO 1.1 (drag & drop)")]
+    [SerializeField] private TuioSessionBehaviour tuioSessionBehaviour;      // ← glisse l’objet “Tuio 1.1 Session”
 
-    [Header("Prefabs par polarité")]
-    public GameObject attractorPrefab;   // prefab “Caillou Attracteur”
-    public GameObject repulsorPrefab;    // prefab “Caillou Répulseur”
+    [Header("Prefabs")]
+    [SerializeField] private GameObject attractorPrefab; // visuel attracteur
+    [SerializeField] private GameObject repulsorPrefab;  // visuel répulseur
 
-    [Header("Plage du rayon d’influence (mètres)")]
-    public float minRange = 1f;
-    public float maxRange = 8f;
-
-    [Header("Orientation de référence")]
-    [Tooltip("Décalage rad si 0 rad du marqueur ≠ bord nord")]
-    public float angleOffset = 0f;
-
-    [Header("Association marqueur → polarité")]
+    [Header("Fiducial IDs")]
     public int attractorId = 100;
     public int repulsorId  = 101;
 
-    [Header("Limite simultanée")]
-    public int maxTokens = 10;
+    [Header("Influence radius (m)")]
+    public float minRange = 1f;
+    public float maxRange = 8f;
+    public float angleOffset = 0f;      // rad – décale 0 rad si nécessaire
 
-    /* ---------- Champs privés ---------- */
+    /* -------- internes -------- */
+    private Tuio11Dispatcher dispatcher;                   // événements Add / Update / Remove
+    private readonly Dictionary<long,(GameObject go, TokenData data)> tokens = new();
+    private const int kMaxTokens = 10;
+    private SwarmManager swarmMgr;                         // mis en cache
 
-    Tuio11Dispatcher dispatcher;
-    readonly Dictionary<long,(GameObject go, TokenData data)> tokens = new();
-
-    /* ===================================================================== */
-    #region Unity lifecycle
-    void Awake()
+    /* ====================================================== */
+    private void Awake()
     {
-        dispatcher = FindObjectOfType<Tuio11Dispatcher>();
-        if (dispatcher == null)
+        /* 1. Vérifie que la session est assignée ----------- */
+        if (tuioSessionBehaviour == null)
         {
-            Debug.LogError("[TangibleInputManager] Ajoute ‘GameObject ▸ TUIO ▸ Tuio 1.1 Session’ dans la scène !");
+            Debug.LogError("[TangibleInput] Champ « Session » vide ! "
+              + "Ajoute GameObject ▸ TUIO ▸ Tuio 1.1 Session dans la scène, "
+              + "puis glisse-le ici.", this);
             enabled = false;
             return;
         }
 
-        dispatcher.OnObjectAdd    += OnAdd;
-        dispatcher.OnObjectUpdate += OnUpdate;
-        dispatcher.OnObjectRemove += o => OnRemove(o.SessionID);
+        /* 2. Récupère le dispatcher 1.1 -------------------- */
+        dispatcher = tuioSessionBehaviour.TuioDispatcher as Tuio11Dispatcher;
+        if (dispatcher == null)
+        {
+            Debug.LogError("[TangibleInput] Dispatcher 1.1 introuvable ; "
+              + "assure-toi que la session est bien en mode TUIO 1.1.");
+            enabled = false;
+            return;
+        }
+
+        /* 3. Branche les événements ------------------------ */
+        dispatcher.OnObjectAdd    += (_,o) => OnAdd(o);
+        dispatcher.OnObjectUpdate += (_,o) => OnUpdate(o);
+        dispatcher.OnObjectRemove += (_,o) => OnRemove(o.SessionId);
+
+        /* 4. Cache le SwarmManager ------------------------- */
+        swarmMgr = FindAnyObjectByType<SwarmManager>();
     }
-    #endregion
 
-    /* ===================================================================== */
-    #region Handlers TUIO
-    void OnAdd(Tuio11Object o)
+    /* -------------------- ADD -------------------- */
+    private void OnAdd(Tuio11Object o)
     {
-        if (tokens.Count >= maxTokens) return;  // limite souple
+        if (tokens.Count >= kMaxTokens) return;
 
-        // Choix polarité + prefab
         TokenPolarity pol;
         GameObject prefab;
-        if      (o.ClassID == attractorId) { pol = TokenPolarity.Attractor; prefab = attractorPrefab; }
-        else if (o.ClassID == repulsorId)  { pol = TokenPolarity.Repulsor;  prefab = repulsorPrefab;  }
-        else                               return; // ID inconnu → ignoré
+        if      (o.SymbolId == attractorId) { pol = TokenPolarity.Attractor; prefab = attractorPrefab; }
+        else if (o.SymbolId == repulsorId)  { pol = TokenPolarity.Repulsor;  prefab = repulsorPrefab;  }
+        else return;                                 // ID inconnu → on ignore
 
-        // Instancie
         var go = Instantiate(prefab);
-        go.GetComponent<DraggableToken>().enabled = false; // désactive le drag souris
+        if (go.TryGetComponent(out DraggableToken dt)) dt.enabled = false;
 
-        // Crée la data
         var data = new TokenData(pol, Vector3.zero, 3f, 1f, 1f);
         TokenManager.Instance.AddToken(data);
 
-        // Enregistre
-        tokens[o.SessionID] = (go, data);
-        UpdateToken(o, go, data);              // position + range initiales
+        tokens[o.SessionId] = (go, data);
+        UpdateToken(o, go, data);                    // position initiale
     }
 
-    void OnUpdate(Tuio11Object o)
+    /* ------------------- UPDATE ------------------ */
+    private void OnUpdate(Tuio11Object o)
     {
-        if (!tokens.TryGetValue(o.SessionID, out var t)) return;
-        UpdateToken(o, t.go, t.data);
+        if (tokens.TryGetValue(o.SessionId, out var t))
+            UpdateToken(o, t.go, t.data);
     }
 
-    void OnRemove(long id)
+    private void UpdateToken(Tuio11Object o, GameObject go, TokenData data)
     {
-        if (!tokens.TryGetValue(id, out var t)) return;
-        TokenManager.Instance.RemoveToken(t.data);
-        Destroy(t.go);
-        tokens.Remove(id);
-    }
-    #endregion
-
-    /* ===================================================================== */
-    #region Core
-    void UpdateToken(Tuio11Object o, GameObject go, TokenData data)
-    {
-        Vector2 uv = o.Position;                           // 0–1
+        Vector2 uv = new((float)o.Position.X, (float)o.Position.Y);
         go.transform.position = TableToWorld(uv);
         data.Position         = go.transform.position;
 
-        float angle = Normalize(o.AngleRad + angleOffset); // rad [0,2π[
-        data.Range  = Mathf.Lerp(minRange, maxRange, angle / (2f * Mathf.PI));
+        float angle = Normalize(o.Angle + angleOffset);        // rad ∈ [0,2π[
+        data.Range  = Mathf.Lerp(minRange, maxRange,
+                                 angle / (2f*Mathf.PI));
     }
-    #endregion
 
-    /* ===================================================================== */
-    #region Helpers
-    static float Normalize(float a)
+    /* ------------------- REMOVE ------------------ */
+    private void OnRemove(long sid)
+    {
+        if (!tokens.TryGetValue(sid, out var t)) return;
+        TokenManager.Instance.RemoveToken(t.data);
+        Destroy(t.go);
+        tokens.Remove(sid);
+    }
+
+    /* ------------------ Helpers ------------------ */
+    private Vector3 TableToWorld(Vector2 uv)
+    {
+        if (swarmMgr == null) return new Vector3(uv.x, 0f, uv.y); // fallback
+        var p = swarmMgr.GetSwarmData().GetParameters();
+        return new Vector3(uv.x * p.GetMapSizeX(), 0f,
+                           uv.y * p.GetMapSizeZ());
+    }
+
+    private static float Normalize(float a)
     {
         const float TAU = Mathf.PI * 2f;
-        a %= TAU;
-        return a < 0f ? a + TAU : a;
+        a %= TAU; return a < 0 ? a + TAU : a;
     }
-
-    Vector3 TableToWorld(Vector2 uv)
-    {
-        var p = SwarmManager.Instance.GetSwarmData().GetParameters();
-        return new Vector3(uv.x * p.GetMapSizeX(), 0f, uv.y * p.GetMapSizeZ());
-    }
-    #endregion
 }
