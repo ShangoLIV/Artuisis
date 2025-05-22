@@ -94,7 +94,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: f58c31bd6ab7d004eb8b2646e6f5519d, type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -192,8 +192,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   agentBehaviour: 1
   agentMovement: 1
-  mapSizeX: 10
-  mapSizeZ: 10
+  mapSizeX: 16
+  mapSizeZ: 9
   fieldOfViewSize: 1
   blindSpotSize: 30
   maxSpeed: 0.1

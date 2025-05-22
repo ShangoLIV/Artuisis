@@ -181,7 +181,7 @@ public class SwarmManager : MonoBehaviour
         float x=parameters.GetMapSizeX();
         float z=parameters.GetMapSizeZ();
         float max = Mathf.Max(x, z);
-        Camera.main.transform.position = new Vector3(x / 2.0f, max, z / 2.0f);
+        Camera.main.transform.position = new Vector3(x / 2.0f, max/2.0f, z / 2.0f);
     }
 
 

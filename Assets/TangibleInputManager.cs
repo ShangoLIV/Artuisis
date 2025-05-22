@@ -1,4 +1,4 @@
-// TangibleInputManager.cs – Unity 2023  +  TuioUnityClient v2.x
+	// TangibleInputManager.cs – Unity 2023  +  TuioUnityClient v2.x
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -97,7 +97,7 @@ public class TangibleInputManager : MonoBehaviour
 
     private void UpdateToken(Tuio11Object o, GameObject go, TokenData data)
     {
-        Vector2 uv = new((float)o.Position.X, (float)o.Position.Y);
+        Vector2 uv = new((float)o.Position.X, -((float)o.Position.Y-1));
         go.transform.position = TableToWorld(uv);
         data.Position         = go.transform.position;
 
