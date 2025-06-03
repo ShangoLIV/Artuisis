@@ -123,4 +123,4 @@ MonoBehaviour:
   polarity: 0
   range: 1
   strength: 0.8
-  hitRadius: 0.1
+  hitRadius: 0.15

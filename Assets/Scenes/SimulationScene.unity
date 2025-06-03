@@ -209,7 +209,7 @@ MonoBehaviour:
   repulsionZoneSize: 0.3
   distanceBetweenAgents: 1
   puckInfluenceGain: 4
-  puckFallOffExponent: 2
+  puckFallOffExponent: 1
   repulsorWallBoost: 2
 --- !u!114 &173933246
 MonoBehaviour:
@@ -1140,9 +1140,18 @@ MonoBehaviour:
   repulsorPrefab: {fileID: 279636932430015018, guid: ea9ea795175e16a48ba7e9aa59939483, type: 3}
   attractorId: 1054
   repulsorId: 1056
+  strengthAId: 1057
+  strengthBId: 1055
   minRange: 1
   maxRange: 8
-  angleOffset: 0
+  minStrength: 0
+  maxStrength: 1
+  pairDistance: 2
+  pairTolerance: 0.5
+  clockwiseIncreases: 1
+  selectionThreshold: 0.01
+  defaultRange: 3
+  radiusMargin: 0
 --- !u!4 &1520117676
 Transform:
   m_ObjectHideFlags: 0
