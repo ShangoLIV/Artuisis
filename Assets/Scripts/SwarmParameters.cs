@@ -1,3 +1,5 @@
+using UnityEngine;
+
 [System.Serializable]
 public class SwarmParameters
 {
@@ -212,4 +214,9 @@ public class SwarmParameters
     }
 
     #endregion
+
+    public void SetMaxSpeed(float maxSpeed)
+    {
+        this.maxSpeed = Mathf.Clamp(maxSpeed, 0.1f, 10f);
+    }
 }

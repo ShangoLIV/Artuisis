@@ -1142,6 +1142,7 @@ MonoBehaviour:
   repulsorId: 1056
   strengthAId: 1057
   strengthBId: 1055
+  vitesseId: 1064
   minRange: 1
   maxRange: 8
   minStrength: 0
@@ -1150,6 +1151,8 @@ MonoBehaviour:
   pairTolerance: 0.5
   clockwiseIncreases: 1
   selectionThreshold: 0.01
+  minSpeed: 0.01
+  maxSpeed: 1
   defaultRange: 3
   radiusMargin: 0
 --- !u!4 &1520117676
@@ -1581,6 +1584,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: analysedForces.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: 'analysedForces.Array.data[3]'
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: correspondingColors.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: correspondingColors.Array.data[3].b
+      value: 0.8586337
+      objectReference: {fileID: 0}
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: correspondingColors.Array.data[3].g
+      value: 0.011764705
+      objectReference: {fileID: 0}
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: correspondingColors.Array.data[3].r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3502333210265931007, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: m_Name
       value: '[Displayers]'

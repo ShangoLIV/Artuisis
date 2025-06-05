@@ -47,7 +47,9 @@ public class TangibleInputManager : MonoBehaviour
     public bool clockwiseIncreases = true;
     [Tooltip("Tolérance pour sélectionner un caillou (m)")]
     public float selectionThreshold = 0.02f;   // 2 cm
-    
+    [Header("Plage vitesse (m/s)")]
+    public float minSpeed = 0.01f;
+    public float maxSpeed = 1f;
     [Header("Valeur par défaut du rayon")]
     public float defaultRange = 3f;
 
@@ -68,10 +70,12 @@ public class TangibleInputManager : MonoBehaviour
     private readonly Dictionary<long, float> tokenAngleOffset = new();
     private readonly Dictionary<(long, long), RingState> rings = new();
     // offset et valeur de départ mémorisés quand l’anneau se pose sur un token
-    private float ringAngleOffset = 0f;           // rad
     public  float radiusMargin = 0.2f;
-
+    
     private float ringStrengthStart;
+
+    private float speedAngleOffset;
+    private float InitialSpeed;
     /*  règle-force */
     readonly Dictionary<long,Tuio11Object> ringMarkers = new();   // stocke A et B
     TokenData selectedToken;
@@ -111,6 +115,13 @@ public class TangibleInputManager : MonoBehaviour
             ringMarkers[o.SessionId] = o;  
             ProcessRings();           // traite la rotation
             return;                                   // on ne crée pas de caillou
+        }
+
+        if (o.SymbolId == vitesseId)
+        {
+            if (isAdd) OnAddSpeed(o);
+            else UpdateSpeed(o);
+            return;
         }
 
         /* 2. Création des cailloux ----------------------------------------- */
@@ -192,14 +203,38 @@ public class TangibleInputManager : MonoBehaviour
         Vector2 uv = new(o.Position.X, 1f - o.Position.Y); // Y inversé
         go.transform.position = TableToWorld(uv);
         data.Position = go.transform.position;
-
-        // range par rotation (π/2 offset)
+        
         float delta = ShortestDeltaRad(tokenAngleOffset[o.SessionId], o.Angle); // rad ∈ [-π;π]
 
         float t = Mathf.Clamp01(Mathf.Abs(delta) / Mathf.PI);
         data.Range = Mathf.Lerp(minRange, maxRange, t);
     }
 
+    void OnAddSpeed(Tuio11Object o)
+    {
+        speedAngleOffset = (float)o.Angle;                          // rad
+        InitialSpeed     = swarmMgr.GetSwarmData()
+            .GetParameters()
+            .GetMaxSpeed();               // vitesse courante
+    }
+
+    void UpdateSpeed(Tuio11Object o)
+    {
+        float delta = ShortestDeltaRad(speedAngleOffset, (float)o.Angle); // -π..π
+        float t     = Mathf.Clamp(delta / Mathf.PI, -1f, 1f);            // -1..+1
+
+        // sens horaire ↑ / anti-horaire ↓
+        float newSpeed = Mathf.Clamp(InitialSpeed + t * (maxSpeed - minSpeed),
+            minSpeed, maxSpeed);
+
+        swarmMgr.GetSwarmData().GetParameters().SetMaxSpeed(newSpeed);
+
+        // debug visuel : petit disque rose autour du marqueur
+        Vector2 uv = new((float)o.Position.X, 1f - (float)o.Position.Y);
+        DebugExtension.DrawCircle(TableToWorld(uv) + Vector3.up*0.01f,
+            Vector3.up, Color.magenta, 0.05f, 32, 0f);
+        Debug.Log("speed" + swarmMgr.GetSwarmData().GetParameters().GetMaxSpeed());
+    }
     /* ---------------------- remove ---------------------------------------- */
     void OnRemove(long sid)
     {
@@ -248,18 +283,16 @@ public class TangibleInputManager : MonoBehaviour
     // angle courant du segment
     float angle = Mathf.Atan2((ToWorld(b) - ToWorld(a)).z,
                               (ToWorld(b) - ToWorld(a)).x);
+    angle += 0.8f * 2f* Mathf.PI;
 
-    // Δθ signé le plus court  (–π .. +π)
-    float delta = ShortestDeltaRad(r.angleOffset, angle);
+    // Δθ signé le plus court  (–0 .. +2π)
+    float delta = ShortestDeltaRad(r.angleOffset, angle) + Mathf.PI;
 
-    // fraction de demi-tour  (–1 .. +1)
-    float t = Mathf.Clamp(delta / Mathf.PI, -1f, 1f);
-
-    // sens : horaire ↑  /  anti-horaire ↓
-    float sign = clockwiseIncreases ? -1f : 1f;
-
-    r.target.Strength01 = Mathf.Clamp01(r.startStrength + sign * t);
-
+    // fraction de demi-tour  (0 .. +1)
+    float t = Mathf.Clamp(delta / (2f * Mathf.PI), 0f, 1f);
+    
+    r.target.Strength01 = Mathf.Lerp(0f, 1f,1-t); //r.startStrength + 
+    Debug.Log(r.target.Strength01);
     /* ----- debug visuel ----- */
     Vector3 centre = (ToWorld(a) + ToWorld(b)) * .5f;
     float   radius = Vector3.Distance(ToWorld(a), ToWorld(b))*0.5f + radiusMargin;
@@ -283,7 +316,8 @@ public class TangibleInputManager : MonoBehaviour
 
     #endregion
     /* ======================================================================== */
-   
+    #region helper  ------------------------------------------------------------------
+    
     Vector3 TableToWorld(Vector2 uv)
     {
         if (swarmMgr == null) return new Vector3(uv.x, 0f, uv.y);
@@ -305,5 +339,7 @@ public class TangibleInputManager : MonoBehaviour
         float deltaDeg = Mathf.DeltaAngle(fromRad * Mathf.Rad2Deg, toRad * Mathf.Rad2Deg);
         return deltaDeg * Mathf.Deg2Rad;            // rad signé ∈ [-π, +π]
     }
+    #endregion
+    /* ======================================================================== */
 }
 

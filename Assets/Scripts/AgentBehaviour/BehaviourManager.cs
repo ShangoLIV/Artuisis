@@ -22,7 +22,8 @@ public class BehaviourManager
         Friction,
         Random,
         Forward,
-        Potential
+        Potential,
+		Token
     }
 
     public static List<Vector3> ApplySocialBehaviour(AgentBehaviour agentBehaviour, AgentData agent, SwarmData swarm)
@@ -74,7 +75,7 @@ public class BehaviourManager
             {
                 // on n’ajoute que si l’agent est à moins de Range (optimisation)
                 float sqrDist = (tok.Position - agent.GetPosition()).sqrMagnitude;
-                float limit = (tok.HitRadius + 0.45f) * (tok.HitRadius + 0.45f);
+                float limit = tok.HitRadius * tok.HitRadius;
                 if (sqrDist < limit)
                 {
                     Vector3 dir = (agent.GetPosition() - tok.Position).normalized;
@@ -234,7 +235,7 @@ public class BehaviourManager
                 detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Attraction, forces[5]));
                 detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Repulsion, forces[6]));
                 detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Alignment, forces[7]));
-                detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Other, forces[8])); // token
+                detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Token, forces[8])); // token
 
                 break;
             case AgentBehaviour.Couzin:
