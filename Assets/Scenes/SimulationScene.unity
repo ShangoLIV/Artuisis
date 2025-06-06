@@ -1144,7 +1144,7 @@ MonoBehaviour:
   strengthBId: 1055
   vitesseId: 1064
   minRange: 1
-  maxRange: 8
+  maxRange: 4
   minStrength: 0
   maxStrength: 1
   pairDistance: 2
@@ -1590,7 +1590,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: 'analysedForces.Array.data[3]'
-      value: 0
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: correspondingColors.Array.size

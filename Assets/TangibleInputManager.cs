@@ -58,7 +58,7 @@ public class TangibleInputManager : MonoBehaviour
     readonly Dictionary<long,(GameObject go, TokenData data)> tokens = new();
     const int kMaxTokens = 20;
     SwarmManager swarmMgr;
-
+    private EditorParametersInterface parametersInterface;
     class RingState
     {
         public long idA, idB;
@@ -100,6 +100,7 @@ public class TangibleInputManager : MonoBehaviour
         dispatcher.OnObjectRemove += (_,o) => OnRemove(o.SessionId);
 
         swarmMgr = FindAnyObjectByType<SwarmManager>();
+        parametersInterface = FindAnyObjectByType<EditorParametersInterface>();
     }
 
     /* ======================================================================== */
@@ -144,8 +145,8 @@ public class TangibleInputManager : MonoBehaviour
 
             // distance A-B
             float d = Vector3.Distance(ToWorld(m), ToWorld(mate));
-            Debug.Log($"pair {m.SymbolId}/{mate.SymbolId}  dist={d:F2}  "
-                      + $"valid={(Mathf.Abs(d - pairDistance) <= pairTolerance)}");
+            //Debug.Log($"pair {m.SymbolId}/{mate.SymbolId}  dist={d:F2}  "
+            //          + $"valid={(Mathf.Abs(d - pairDistance) <= pairTolerance)}");
 
             if (Mathf.Abs(d - pairDistance) > pairTolerance) { rings.Remove(key); continue; }
 
@@ -203,7 +204,7 @@ public class TangibleInputManager : MonoBehaviour
         Vector2 uv = new(o.Position.X, 1f - o.Position.Y); // Y inversé
         go.transform.position = TableToWorld(uv);
         data.Position = go.transform.position;
-        
+         
         float delta = ShortestDeltaRad(tokenAngleOffset[o.SessionId], o.Angle); // rad ∈ [-π;π]
 
         float t = Mathf.Clamp01(Mathf.Abs(delta) / Mathf.PI);
@@ -227,7 +228,7 @@ public class TangibleInputManager : MonoBehaviour
         float newSpeed = Mathf.Clamp(InitialSpeed + t * (maxSpeed - minSpeed),
             minSpeed, maxSpeed);
 
-        swarmMgr.GetSwarmData().GetParameters().SetMaxSpeed(newSpeed);
+        parametersInterface.SetMaxSpeed(newSpeed);
 
         // debug visuel : petit disque rose autour du marqueur
         Vector2 uv = new((float)o.Position.X, 1f - (float)o.Position.Y);
@@ -275,23 +276,37 @@ public class TangibleInputManager : MonoBehaviour
             isInitialised = true          // ← offset mémorisé
         };
 
-        Debug.Log($"[Ring] init on token {token}  angle0={angle0:F2}  S0={token.Strength01:F2}");
+        //Debug.Log($"[Ring] init on token {token}  angle0={angle0:F2}  S0={token.Strength01:F2}");
     }
 
     void OnStrengthUpdate(Tuio11Object a, Tuio11Object b, RingState r)
 {
+    bool locked = false;
     // angle courant du segment
     float angle = Mathf.Atan2((ToWorld(b) - ToWorld(a)).z,
                               (ToWorld(b) - ToWorld(a)).x);
-    angle += 0.8f * 2f* Mathf.PI;
-
+    angle -= r.startStrength * 2 * Mathf.PI;
+    
     // Δθ signé le plus court  (–0 .. +2π)
     float delta = ShortestDeltaRad(r.angleOffset, angle) + Mathf.PI;
-
-    // fraction de demi-tour  (0 .. +1)
-    float t = Mathf.Clamp(delta / (2f * Mathf.PI), 0f, 1f);
-    
-    r.target.Strength01 = Mathf.Lerp(0f, 1f,1-t); //r.startStrength + 
+    float t = delta / Mathf.PI;
+    Debug.Log(t);
+    if (t > 1.7)
+    {
+        r.target.Strength01 = 1f;
+    }
+    else if (t > 1.3f)
+    {
+        r.target.Strength01 = 0.5f;
+    }
+    else if (t > 1f)
+    {
+        r.target.Strength01 = 0f;
+    }
+    else
+    {
+        r.target.Strength01 = Mathf.Lerp(0f, 1f,1-t);    
+    }
     Debug.Log(r.target.Strength01);
     /* ----- debug visuel ----- */
     Vector3 centre = (ToWorld(a) + ToWorld(b)) * .5f;
