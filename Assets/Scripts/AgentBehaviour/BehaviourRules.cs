@@ -328,4 +328,69 @@ public class BehaviourRules
         }
         return sum;
     }
+	/* ─────────────────────────  ATTRACTEURS  ───────────────────────── */
+    public static Vector3 ComputeAttractorForce(
+        AgentData agent,
+        IReadOnlyList<TokenData> tokens,
+        float gain,
+        float fallExp)
+    {
+        if (tokens == null || tokens.Count == 0) return Vector3.zero;
+
+        Vector3 sum = Vector3.zero;
+        Vector3 pos = agent.GetPosition();
+
+        foreach (var tok in tokens)
+        {
+            if (tok.Polarity != TokenPolarity.Attractor) continue;
+
+            float dist = Vector3.Distance(pos, tok.Position);
+            if (dist < tok.HitRadius) continue;         // dans la zone morte
+
+            if (dist > tok.Range) continue;             // hors influence
+
+            Vector3 dir = (tok.Position - pos).normalized;
+            float falloff = 1f - dist / tok.Range;      // linéaire
+            falloff = Mathf.Pow(falloff, fallExp);      // → courbe
+            sum += dir * gain * falloff * tok.Strength01;
+        }
+        return sum;
+    }
+
+    /* ─────────────────────────  RÉPULSEURS  ───────────────────────── */
+    public static Vector3 ComputeRepulsorForce(
+        AgentData agent,
+        IReadOnlyList<TokenData> tokens,
+        float gain,
+        float fallExp,
+        float wallBoost)
+    {
+        if (tokens == null || tokens.Count == 0) return Vector3.zero;
+
+        Vector3 sum = Vector3.zero;
+        Vector3 pos = agent.GetPosition();
+
+        foreach (var tok in tokens)
+        {
+            if (tok.Polarity != TokenPolarity.Repulsor) continue;
+
+            float dist = Vector3.Distance(pos, tok.Position);
+
+            /* ─ dans HitRadius ⇒ “push” linéaire, plus fort ─ */
+            if (dist < tok.HitRadius)
+            {
+                float push = (tok.HitRadius - dist) / tok.HitRadius;
+                sum += (pos - tok.Position).normalized * gain * 2f * push;
+                continue;
+            }
+            /* ─ sinon influence décroissante ─ */
+            if (dist > tok.Range) continue;
+
+            Vector3 dir = (pos - tok.Position).normalized; // repoussé
+            float falloff = 1f - dist / tok.Range;
+            falloff = Mathf.Pow(falloff, fallExp);
+            sum += dir * gain * wallBoost * falloff * tok.Strength01;
+        }
+        return sum;
+    }
 }

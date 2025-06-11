@@ -211,6 +211,7 @@ MonoBehaviour:
   puckInfluenceGain: 4
   puckFallOffExponent: 1
   repulsorWallBoost: 2
+  continueStrengthControl: 0
 --- !u!114 &173933246
 MonoBehaviour:
   m_ObjectHideFlags: 0

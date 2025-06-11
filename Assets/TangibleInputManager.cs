@@ -280,39 +280,41 @@ public class TangibleInputManager : MonoBehaviour
     }
 
     void OnStrengthUpdate(Tuio11Object a, Tuio11Object b, RingState r)
-{
-    bool locked = false;
-    // angle courant du segment
-    float angle = Mathf.Atan2((ToWorld(b) - ToWorld(a)).z,
-                              (ToWorld(b) - ToWorld(a)).x);
-    angle -= r.startStrength * 2 * Mathf.PI;
-    
-    // Δθ signé le plus court  (–0 .. +2π)
-    float delta = ShortestDeltaRad(r.angleOffset, angle) + Mathf.PI;
-    float t = delta / Mathf.PI;
-    Debug.Log(t);
-    if (t > 1.7)
     {
-        r.target.Strength01 = 1f;
+        bool continueStrengthControl = parametersInterface.GetContinueStrengthControl();
+        
+        // angle courant du segment
+        float angle = Mathf.Atan2((ToWorld(b) - ToWorld(a)).z,
+                                  (ToWorld(b) - ToWorld(a)).x);
+        angle -= continueStrengthControl ? r.startStrength * Mathf.PI : r.startStrength * 2 * Mathf.PI;
+        
+        // Δθ signé le plus court  (–0 .. +2π)
+        float delta = ShortestDeltaRad(r.angleOffset, angle);
+        delta += continueStrengthControl ? 0 : Mathf.PI;
+        float t = continueStrengthControl ? Mathf.Clamp01(Mathf.Abs(delta) / Mathf.PI) : delta / Mathf.PI;
+        Debug.Log(t);
+        if (t > 1.7)
+        {
+            r.target.Strength01 = 1f;
+        }
+        else if (t > 1.3f)
+        {
+            r.target.Strength01 = 0.5f;
+        }
+        else if (t > 1f)
+        {
+            r.target.Strength01 = 0f;
+        }
+        else
+        {
+            r.target.Strength01 = Mathf.Lerp(0f, 1f,1-t);    
+        }    
+        Debug.Log(r.target.Strength01);
+        /* ----- debug visuel ----- */
+        Vector3 centre = (ToWorld(a) + ToWorld(b)) * .5f;
+        float   radius = Vector3.Distance(ToWorld(a), ToWorld(b))*0.5f + radiusMargin;
+        DebugExtension.DrawCircle(centre + Vector3.up*0.02f, Vector3.up, Color.cyan, radius, 64, 0f);
     }
-    else if (t > 1.3f)
-    {
-        r.target.Strength01 = 0.5f;
-    }
-    else if (t > 1f)
-    {
-        r.target.Strength01 = 0f;
-    }
-    else
-    {
-        r.target.Strength01 = Mathf.Lerp(0f, 1f,1-t);    
-    }
-    Debug.Log(r.target.Strength01);
-    /* ----- debug visuel ----- */
-    Vector3 centre = (ToWorld(a) + ToWorld(b)) * .5f;
-    float   radius = Vector3.Distance(ToWorld(a), ToWorld(b))*0.5f + radiusMargin;
-    DebugExtension.DrawCircle(centre + Vector3.up*0.02f, Vector3.up, Color.cyan, radius, 64, 0f);
-}
 
 
     TokenData FindTokenInDisk(Vector3 centre, float radius)

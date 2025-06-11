@@ -93,6 +93,8 @@ public class EditorParametersInterface : MonoBehaviour
     [Range(1.0f, 20.0f)]
     private float repulsorWallBoost = 4.0f;
 
+    [SerializeField] private bool continueStrengthControl = false;
+
     public SwarmParameters GetParameters()
     {
         SwarmParameters parameters = new SwarmParameters(agentBehaviour,
@@ -115,7 +117,8 @@ public class EditorParametersInterface : MonoBehaviour
                                                         distanceBetweenAgents,
                                                         puckInfluenceGain,
                                                         puckFallOffExponent,
-                                                        repulsorWallBoost);
+                                                        repulsorWallBoost,
+                                                        continueStrengthControl);
         return parameters;
     }
 
@@ -142,7 +145,8 @@ public class EditorParametersInterface : MonoBehaviour
         this.puckInfluenceGain = parameters.GetPuckInfluenceGain();
         this.puckFallOffExponent = parameters.GetPuckFallOffExponent();
         this.repulsorWallBoost = parameters.GetRepulsorWallBoost();
-        
+        this.continueStrengthControl = parameters.GetContinueStrengthControl();
+
     }
 
 
@@ -211,6 +215,8 @@ public class EditorParametersInterface : MonoBehaviour
     public float GetMaxSpeed() { return this.maxSpeed; }
 
     public float GetFrictionIntensity() { return this.frictionIntensity; }
+    
+    public bool GetContinueStrengthControl() { return this.continueStrengthControl; }
 
     public MovementManager.AgentMovement GetAgentMovenent() { return this.agentMovement; }
     #endregion

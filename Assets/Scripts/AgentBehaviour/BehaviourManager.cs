@@ -9,6 +9,7 @@ public class BehaviourManager
     {
         None,
         Reynolds,
+        ReynoldsDuo,
         Couzin,
         PreservationConnectivity
     }
@@ -23,7 +24,9 @@ public class BehaviourManager
         Random,
         Forward,
         Potential,
-		Token
+		Token,
+        TokenAtt,
+        tokenRep
     }
 
     public static List<Vector3> ApplySocialBehaviour(AgentBehaviour agentBehaviour, AgentData agent, SwarmData swarm)
@@ -37,6 +40,9 @@ public class BehaviourManager
                 break;
             case AgentBehaviour.Reynolds:
                 forces = ReynoldsBehaviour(agent, swarm);
+                break;
+            case AgentBehaviour.ReynoldsDuo:
+                forces = ReynoldsDuoBehaviour(agent, swarm);
                 break;
             case AgentBehaviour.Couzin:
                 forces = CouzinBehaviour(agent, swarm);
@@ -96,6 +102,55 @@ public class BehaviourManager
         forces.Add(BehaviourRules.Alignment(parameters.GetAlignmentIntensity(), neighboursSpeeds));
         Vector3 tokenForce = BehaviourRules.ComputeTokenForce(agent, tokens, parameters.GetPuckInfluenceGain(), parameters.GetPuckFallOffExponent(), parameters.GetRepulsorWallBoost());
         forces.Add(tokenForce);
+        
+        return forces;
+    }
+    
+    private static List<Vector3> ReynoldsDuoBehaviour(AgentData agent, SwarmData swarm)
+    {
+        List<Vector3> forces = new List<Vector3>();
+
+        SwarmParameters parameters = swarm.GetParameters();
+
+        List<AgentData> neighbours = SwarmTools.GetNeighbours(agent, swarm.GetAgentsData(), parameters.GetFieldOfViewSize(), parameters.GetBlindSpotSize());
+
+        List<Vector3> neighboursPositions = new List<Vector3>();
+        List<Vector3> neighboursSpeeds = new List<Vector3>();
+        foreach (AgentData a in neighbours)
+        {
+            neighboursPositions.Add(a.GetPosition());
+            neighboursSpeeds.Add(a.GetSpeed());
+        }
+        var tokens = TokenManager.Instance?.GetActiveTokens();
+        if (tokens != null && tokens.Count > 0)
+        {
+            foreach (var tok in tokens)
+            {
+                // on n’ajoute que si l’agent est à moins de Range (optimisation)
+                float sqrDist = (tok.Position - agent.GetPosition()).sqrMagnitude;
+                float limit = tok.HitRadius * tok.HitRadius;
+                if (sqrDist < limit)
+                {
+                    Vector3 dir = (agent.GetPosition() - tok.Position).normalized;
+                    Vector3 surface = tok.Position + dir * tok.HitRadius;
+                    neighboursPositions.Add(surface);
+                }
+            }
+        }
+
+        forces.Add(BehaviourRules.RandomMovement(parameters.GetRandomMovementIntensity(), swarm.GetRandomGenerator()));
+        forces.Add(BehaviourRules.MoveForward(parameters.GetMoveForwardIntensity(), agent.GetSpeed()));
+        forces.Add(BehaviourRules.Friction(parameters.GetFrictionIntensity(), agent.GetSpeed()));
+        forces.Add(BehaviourRules.AvoidCollisionWithNeighbours(parameters.GetAvoidCollisionWithNeighboursIntensity(), agent.GetPosition(), neighboursPositions, parameters.GetMaxSpeed(), 0.45f));
+        forces.Add(BehaviourRules.BouncesOffWall(agent.GetPosition(), parameters.GetMaxSpeed(), parameters.GetMapSizeX(), parameters.GetMapSizeZ()));
+
+        forces.Add(BehaviourRules.Cohesion(parameters.GetCohesionIntensity(), agent.GetPosition(), neighboursPositions));
+        forces.Add(BehaviourRules.Separation(parameters.GetSeparationIntensity(), agent.GetPosition(), neighboursPositions));
+        forces.Add(BehaviourRules.Alignment(parameters.GetAlignmentIntensity(), neighboursSpeeds));
+        Vector3 tokenAttForce = BehaviourRules.ComputeAttractorForce(agent, tokens, parameters.GetPuckInfluenceGain(), parameters.GetPuckFallOffExponent());
+        Vector3 tokenRepForce = BehaviourRules.ComputeRepulsorForce(agent, tokens, parameters.GetPuckInfluenceGain(), parameters.GetPuckFallOffExponent(), parameters.GetRepulsorWallBoost());
+        forces.Add(tokenAttForce);
+        forces.Add(tokenRepForce);
         
         return forces;
     }
@@ -237,6 +292,13 @@ public class BehaviourManager
                 detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Alignment, forces[7]));
                 detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Token, forces[8])); // token
 
+                break;
+            case AgentBehaviour.ReynoldsDuo:
+                detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Attraction, forces[5]));
+                detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Repulsion, forces[6]));
+                detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Alignment, forces[7]));
+                detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.TokenAtt, forces[8]));
+                detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.tokenRep, forces[9]));
                 break;
             case AgentBehaviour.Couzin:
                 detailedForces.Add(new Tuple<ForceType, Vector3>(ForceType.Attraction, forces[5]));

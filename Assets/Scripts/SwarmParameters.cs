@@ -43,6 +43,7 @@ public class SwarmParameters
     private float puckInfluenceGain = 2.0f;
     private float puckFallOffExponent = 2.0f;
     private float repulsorWallBoost = 4.0f;
+    private bool continueStrengthControl = false;
     
     
     #region Methods - Constructor
@@ -67,7 +68,8 @@ public class SwarmParameters
         float distanceBetweenAgents,
         float puckInfluenceGain,
         float puckFallOffExponent,
-        float repulsorWallBoost)
+        float repulsorWallBoost,
+        bool continueStrengthControl)
     {
         this.agentBehaviour = agentBehaviour;
         this.agentMovement = agentMovement;
@@ -90,6 +92,7 @@ public class SwarmParameters
         this.puckInfluenceGain = puckInfluenceGain;
         this.puckFallOffExponent = puckFallOffExponent;
         this.repulsorWallBoost = repulsorWallBoost;
+        this.continueStrengthControl = continueStrengthControl;
     }
     #endregion
 
@@ -213,10 +216,9 @@ public class SwarmParameters
         return repulsorWallBoost;
     }
 
-    #endregion
-
-    public void SetMaxSpeed(float maxSpeed)
+    public bool GetContinueStrengthControl()
     {
-        this.maxSpeed = Mathf.Clamp(maxSpeed, 0.1f, 10f);
+        return continueStrengthControl;
     }
+    #endregion
 }
