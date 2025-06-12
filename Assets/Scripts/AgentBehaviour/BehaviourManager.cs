@@ -122,21 +122,7 @@ public class BehaviourManager
             neighboursSpeeds.Add(a.GetSpeed());
         }
         var tokens = TokenManager.Instance?.GetActiveTokens();
-        if (tokens != null && tokens.Count > 0)
-        {
-            foreach (var tok in tokens)
-            {
-                // on n’ajoute que si l’agent est à moins de Range (optimisation)
-                float sqrDist = (tok.Position - agent.GetPosition()).sqrMagnitude;
-                float limit = tok.HitRadius * tok.HitRadius;
-                if (sqrDist < limit)
-                {
-                    Vector3 dir = (agent.GetPosition() - tok.Position).normalized;
-                    Vector3 surface = tok.Position + dir * tok.HitRadius;
-                    neighboursPositions.Add(surface);
-                }
-            }
-        }
+        
 
         forces.Add(BehaviourRules.RandomMovement(parameters.GetRandomMovementIntensity(), swarm.GetRandomGenerator()));
         forces.Add(BehaviourRules.MoveForward(parameters.GetMoveForwardIntensity(), agent.GetSpeed()));

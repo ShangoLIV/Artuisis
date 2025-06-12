@@ -10,8 +10,11 @@ public class DisplayerTokenInfluence : Displayer
     public Material material;
 
     Mesh mesh;
-    static readonly Color cold = new (0.0f, 0.4f, 1f);
-    static readonly Color hot  = new (1f, 0.2f, 0.1f);
+    static readonly Color coldB = new (0.0f, 0.6f, 1f);
+    static readonly Color hotB  = new (0.0f, 0.0f, 1f);
+    
+    static readonly Color coldR = new (1f, 0.8f, 0f);
+    static readonly Color hotR  = new (1f, 0.0f, 0.0f);
 
     void Awake()                             // Start → Awake (plus tôt)
     {
@@ -53,8 +56,15 @@ public class DisplayerTokenInfluence : Displayer
 
         foreach (var tok in tokens)
         {
-            Color c = Color.Lerp(cold, hot, tok.Strength01);
-
+            Color c;
+            if (tok.Polarity == TokenPolarity.Attractor)
+            {
+                c = Color.Lerp(coldR, hotR, tok.Strength01);
+            }
+            else
+            {
+                c = Color.Lerp(coldB, hotB, tok.Strength01);
+            }
             int vStart = vertices.Count;
             vertices.Add(tok.Position + Vector3.up * 0.01f);   // centre
             colors  .Add(c);

@@ -59,6 +59,7 @@ public class TangibleInputManager : MonoBehaviour
     const int kMaxTokens = 20;
     SwarmManager swarmMgr;
     private EditorParametersInterface parametersInterface;
+    
     class RingState
     {
         public long idA, idB;
@@ -73,7 +74,10 @@ public class TangibleInputManager : MonoBehaviour
     public  float radiusMargin = 0.2f;
     
     private float ringStrengthStart;
-
+    
+    private bool speedFlag = false;
+    private float flaggedSpeed = 1f;
+    private float prevSpeedAngle;
     private float speedAngleOffset;
     private float InitialSpeed;
     /*  règle-force */
@@ -213,7 +217,8 @@ public class TangibleInputManager : MonoBehaviour
 
     void OnAddSpeed(Tuio11Object o)
     {
-        speedAngleOffset = (float)o.Angle;                          // rad
+        speedAngleOffset = (float)o.Angle; // rad
+         // rad
         InitialSpeed     = swarmMgr.GetSwarmData()
             .GetParameters()
             .GetMaxSpeed();               // vitesse courante
@@ -222,14 +227,26 @@ public class TangibleInputManager : MonoBehaviour
     void UpdateSpeed(Tuio11Object o)
     {
         float delta = ShortestDeltaRad(speedAngleOffset, (float)o.Angle); // -π..π
-        float t     = Mathf.Clamp(delta / Mathf.PI, -1f, 1f);            // -1..+1
-
-        // sens horaire ↑ / anti-horaire ↓
-        float newSpeed = Mathf.Clamp(InitialSpeed + t * (maxSpeed - minSpeed),
-            minSpeed, maxSpeed);
-
-        parametersInterface.SetMaxSpeed(newSpeed);
-
+        float t     = Mathf.Clamp(delta / Mathf.PI, -1f, 1f) + InitialSpeed;            // -1..+1
+        Debug.Log(t);
+        if (speedFlag)
+        {
+            parametersInterface.SetMaxSpeed(flaggedSpeed);
+            if (t >= flaggedSpeed - 0.1f && t <= flaggedSpeed + 0.1f)
+            {
+                
+                speedFlag = false;
+            }
+        }
+        else
+        {
+            // sens horaire ↑ / anti-horaire ↓
+            float newSpeed = Mathf.Lerp(minSpeed,
+                maxSpeed, t);
+            speedFlag = t is <= 0.05f or >= 0.95f;
+            flaggedSpeed = t <= 0.06f ? 0f : 1f;
+            parametersInterface.SetMaxSpeed(newSpeed);  
+        }
         // debug visuel : petit disque rose autour du marqueur
         Vector2 uv = new((float)o.Position.X, 1f - (float)o.Position.Y);
         DebugExtension.DrawCircle(TableToWorld(uv) + Vector3.up*0.01f,
@@ -288,7 +305,7 @@ public class TangibleInputManager : MonoBehaviour
                                   (ToWorld(b) - ToWorld(a)).x);
         angle -= continueStrengthControl ? r.startStrength * Mathf.PI : r.startStrength * 2 * Mathf.PI;
         
-        // Δθ signé le plus court  (–0 .. +2π)
+        // Δθ signé le plus court  (–π .. +π)
         float delta = ShortestDeltaRad(r.angleOffset, angle);
         delta += continueStrengthControl ? 0 : Mathf.PI;
         float t = continueStrengthControl ? Mathf.Clamp01(Mathf.Abs(delta) / Mathf.PI) : delta / Mathf.PI;

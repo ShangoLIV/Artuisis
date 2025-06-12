@@ -307,12 +307,10 @@ public class BehaviourRules
             float dist = Vector3.Distance(agent.GetPosition(), tok.Position);
             if (dist < tok.HitRadius)
             {
-                if (tok.Polarity == TokenPolarity.Repulsor)
-                {
-                    float push = (tok.HitRadius - dist) / tok.HitRadius;
-                    sum += (agent.GetPosition() - tok.Position).normalized * gain * 2f *push;
-                }
-                continue;
+                
+                float push = (tok.HitRadius - dist) / tok.HitRadius;
+                sum += (agent.GetPosition() - tok.Position).normalized * gain * 2f *push;
+               
             }
             if (dist > tok.Range) continue;               // hors influence
 
@@ -344,8 +342,13 @@ public class BehaviourRules
         {
             if (tok.Polarity != TokenPolarity.Attractor) continue;
 
-            float dist = Vector3.Distance(pos, tok.Position);
-            if (dist < tok.HitRadius) continue;         // dans la zone morte
+            float dist = Vector3.Distance(pos, tok.Position) + 0.4f;
+            if (dist < tok.HitRadius)
+            {
+                float push = (tok.HitRadius - dist) / tok.HitRadius;
+                sum += (pos - tok.Position).normalized * gain * push;
+                continue;
+            }          // dans la zone morte
 
             if (dist > tok.Range) continue;             // hors influence
 
@@ -377,12 +380,7 @@ public class BehaviourRules
             float dist = Vector3.Distance(pos, tok.Position);
 
             /* ─ dans HitRadius ⇒ “push” linéaire, plus fort ─ */
-            if (dist < tok.HitRadius)
-            {
-                float push = (tok.HitRadius - dist) / tok.HitRadius;
-                sum += (pos - tok.Position).normalized * gain * 2f * push;
-                continue;
-            }
+                
             /* ─ sinon influence décroissante ─ */
             if (dist > tok.Range) continue;
 

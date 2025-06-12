@@ -190,7 +190,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8efc805bbc6c95c4282833d805913608, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  agentBehaviour: 1
+  agentBehaviour: 2
   agentMovement: 1
   mapSizeX: 16
   mapSizeZ: 9
@@ -211,7 +211,7 @@ MonoBehaviour:
   puckInfluenceGain: 4
   puckFallOffExponent: 1
   repulsorWallBoost: 2
-  continueStrengthControl: 0
+  continueStrengthControl: 1
 --- !u!114 &173933246
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1152,7 +1152,7 @@ MonoBehaviour:
   pairTolerance: 0.5
   clockwiseIncreases: 1
   selectionThreshold: 0.01
-  minSpeed: 0.01
+  minSpeed: 0
   maxSpeed: 1
   defaultRange: 3
   radiusMargin: 0
@@ -1587,27 +1587,43 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: analysedForces.Array.size
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: 'analysedForces.Array.data[3]'
-      value: 8
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: 'analysedForces.Array.data[4]'
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: correspondingColors.Array.size
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: correspondingColors.Array.data[3].b
-      value: 0.8586337
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: correspondingColors.Array.data[3].g
-      value: 0.011764705
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: correspondingColors.Array.data[3].r
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: correspondingColors.Array.data[4].b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: correspondingColors.Array.data[4].g
+      value: 0.43137258
+      objectReference: {fileID: 0}
+    - target: {fileID: 241118031145814296, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
+      propertyPath: correspondingColors.Array.data[4].r
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3502333210265931007, guid: 5e4f842bf4d55b74890d9c6395c42879, type: 3}
       propertyPath: m_Name
