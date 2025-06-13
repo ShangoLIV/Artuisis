@@ -227,7 +227,7 @@ public class TangibleInputManager : MonoBehaviour
     void UpdateSpeed(Tuio11Object o)
     {
         float delta = ShortestDeltaRad(speedAngleOffset, (float)o.Angle); // -π..π
-        float t     = Mathf.Clamp(delta / Mathf.PI, -1f, 1f) + InitialSpeed;            // -1..+1
+        float t     = Mathf.Clamp(delta / Mathf.PI + InitialSpeed, -1f, 1f);            // -1..+1
         Debug.Log(t);
         if (speedFlag)
         {
@@ -244,7 +244,7 @@ public class TangibleInputManager : MonoBehaviour
             float newSpeed = Mathf.Lerp(minSpeed,
                 maxSpeed, t);
             speedFlag = t is <= 0.05f or >= 0.95f;
-            flaggedSpeed = t <= 0.06f ? 0f : 1f;
+            flaggedSpeed = t is <= 0.06f and >= -0.50f ? 0f : 1f;
             parametersInterface.SetMaxSpeed(newSpeed);  
         }
         // debug visuel : petit disque rose autour du marqueur
