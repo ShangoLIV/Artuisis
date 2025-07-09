@@ -4,6 +4,8 @@ The aim of this project is to study interaction with swarms of robots, using a s
 
 To this end, this project proposes a multi-agent simulator for simulating the behaviour of swarms of robots, implemented using the Unity game engine (https://unity.com). Different swarm behaviours are implemented, and can be controlled using the various associated parameters. In particular, this simulator allows simulation extracts to be recorded, so that they can be replayed or the simulation restarted from a recording frame. The simulator can also be used to display various swarm visualisations, whether for real-time simulation or for viewing recordings. 
 
+UPDATE 07/2025 ADD Tangible Tokens interaction ("Cailloux"): The simulator now include the usage of tokens that act as attractor/repulsor for the agents. Each token are configurable. The token generation can be done either using mouse and keyboard or using an interactive table compatible with [TuioUnityClient] (https://github.com/InteractiveScapeGmbH/TuioUnityClient).
+
 This documentation explains how the simulator works, as well as the structure of the project code.
 
 ## Table of contents
@@ -12,6 +14,7 @@ This documentation explains how the simulator works, as well as the structure of
 * [Installation](#installation)
 * [Project Files](#project-files)
 * [Unity scenes](#unity-scenes)
+* [Tokens (Cailloux)](#tokens)
 * [Architecture](#architecture)
 * [How to](#how-to)
 
@@ -61,6 +64,14 @@ The _Scripts_ folder contains various sub-folder :
     * [**ClipsTools.cs**](./Assets/Scripts/Clip/ClipTools.cs) contains various clip-related methods.
     * [**FrameTransmitter.cs**](./Assets/Scripts/Clip/FrameTransmitter.cs) is a script used to transfer a clip from one scene to another.
     * [**SwarmClip.cs**](./Assets/Scripts/Clip/SwarmClip.cs) is the clip script.
+* [Caillou](./Assets/Scripts/Caillou) contains all the scripts related to the Caillou logic
+    * [**TokenData.cs**](./Assets/Scripts/Tokens/TokenData.cs) Serializable data for a token (polarity, range, strength, hit radius)
+    * [**TokenManager.cs**](./Assets/Scripts/Tokens/TokenManager.cs) Singleton that stores the list of active tokens and exposes it as `IReadOnlyList<TokenData>` to the rest of the code
+    * [**DraggableToken.cs**](./Assets/Scripts/Tokens/DraggableToken.cs) Attach this to the white/black token prefab. It lets the user grab a token with Ctrl+click, toggle its polarity with Shift+click, adjust range with the mouse wheel, change LED‑style strength with Alt+wheel, and delete it with a middle‑click
+    * [**TangibleInputManager.cs**](./Assets/Scripts/Tokens/TangibleInputManager.cs) Use for the implementation of the Caillou interaction for interactive table
+    * [**TokenDelete.cs**](./Assets/Scripts/Tokens/TokenDelete.cs) Ensure token deletion
+    * [**TokenSpawner.cs**](./Assets/Scripts/Tokens/TokenSpawner.cs) Ensure token creation
+
 * [_Deprecated_](./Assets/Scripts/Deprecated) folder contains old, unused scripts that could potentially be updated. 
 * [_Displayer_](./Assets/Scripts/Displayers) folder contains scripts for displaying agents and other visualisations. The abstract class of the [**Displayer.cs**](./Assets/Scripts/Displayers/Displayer.cs) script is the main component of this folder. The other scripts are various implementation of this class. They are used in the simulator to display visualisations, using the abstract shared method called **DisplayVisual**.
 * [_Experiments_](./Assets/Scripts/Experiments) folder contains the scripts used only during experiments.
@@ -78,16 +89,37 @@ The _Scripts_ folder also contains directly scripts files, mostly related to the
 * [**SerializableVector3.cs**](./Assets/Scripts/SerializableVector3.cs) is a serializable version of a vector3.
 * [**EditorParameterInterface.cs**](./Assets/Scripts/EditorParametersInterface.cs) provides an interface for modifying swarm parameters directly in the Unity editor.
 
+### What changed for Tokens?
 
+- `BehaviourRules.ComputeTokenForce()` computes a signed, linearly‑fading force for each nearby token. It is called from **BehaviourManager.Reynolds** and automatically added to the list of active forces for every agent.
+- `BehaviourRules.ComputeAttractorForce()` and `BehaviourRules.ComputeRepulsorForce()` are version of `BehaviourRules.ComputeTokenForce()` that compute attractor and repulsor apart are called from **BehaviourManager.ReynoldsDuo** 
+- Because tokens are treated like moving neighbours, no change is required in the physics loop – the new force is simply summed with the existing ones before the agent’s acceleration is updated.
+  
 ## Unity scenes <a id="unity-scenes"></a>
 
 This section aims to describe the Unity scenes used in this project, and stored in the [_Scenes_](./Assets/Scenes) folder.
 
 ![Scenes folder screenshot](./images/scenes_folder.jpg "Scenes folder")
 
-### Simulation scene
+### Simulation scene (updated)
 
 The simulation scene simulates a swarm.
+
+New elements :
+
+1. **Token prefabs** are stored in *Assets/Prefab/Tokens*. Drag‑and‑drop a white (attractor) or black (repulsor) token into the scene, or duplicate an existing one at runtime.
+
+2. **Mouse shortcuts** (in play mode, while the cursor is over a token)
+
+   | Action            | Shortcut                   |
+   | ----------------- | -------------------------- |
+   | Grab & move token | Ctrl + Left Click (+ drag) |
+   | Toggle polarity   | Shift + Left Click         |
+   | Change range      | Mouse Wheel                |
+   | Change strength   | Alt + Mouse Wheel          |
+   | Delete token      | Middle Click               |
+
+3. The **TokenManager** GameObject is placed at the root of the hierarchy and is created automatically by the first token if none exists.
 
 ![Simulation scene screenshot](./images/scene_simulation.jpg "Simulation scene")
 
